@@ -26,7 +26,7 @@ setTimeout(() => {
     document.getElementById('openingOverlay').classList.add('hidden');
     
     setTimeout(() => {
-        const text = "Halo, saya Indra Abdul Hakim, Mahasiswa Teknik Industri dengan pengalaman di bengkel mobil, admin penjualan, dan CNC operator. Terima kasih untuk dukungannya.";
+        const text = "Halo, saya Indra Abdul Hakim, Mahasiswa Teknik Industri dengan saat ini sedang belajar banyak hal, terima kasih atas dukungannya.";
         if ('speechSynthesis' in window) {
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'id-ID';
@@ -280,23 +280,19 @@ const sendChatBtn = document.getElementById('sendChatBtn');
 
 async function getAIResponse(message) {
     try {
-        // Panggil backend API kita
-        const response = await fetch('/api/chat', {
+        const response = await fetch('/.netlify/functions/chat', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ message: message })
         });
         
         const data = await response.json();
         return data.response;
     } catch (error) {
-        console.error('Error:', error);
-        return "Maaf, lagi error. Coba lagi ya!";
+        console.error('Chat error:', error);
+        return "Maaf, chatbot lagi error. Coba lagi ya!";
     }
 }
-
 function addMessage(text, sender) {
     const div = document.createElement('div');
     div.className = `message ${sender}`;
@@ -386,4 +382,23 @@ sendBtn.addEventListener('click', () => {
         
         setTimeout(() => notification.classList.remove('show'), 3000);
     }).catch(console.error);
+});
+// ===== AUTOPLAY AUDIO FIX =====
+document.addEventListener('DOMContentLoaded', function() {
+    const audio = document.getElementById('bgMusic');
+    audio.volume = 0.5;
+    
+    function playAudio() {
+        audio.play().catch(e => {
+            console.log('Autoplay failed, waiting for interaction');
+        });
+    }
+    
+    playAudio();
+    
+    // Fallback: play saat user klik pertama kali
+    document.addEventListener('click', function playOnClick() {
+        audio.play();
+        document.removeEventListener('click', playOnClick);
+    }, { once: true });
 });
