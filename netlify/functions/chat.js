@@ -1,6 +1,10 @@
 const fetch = require('node-fetch');
 
 exports.handler = async function(event, context) {
+    // Logging untuk debugging
+    console.log('Function triggered');
+    console.log('Method:', event.httpMethod);
+    
     if (event.httpMethod !== 'POST') {
         return { 
             statusCode: 405, 
@@ -10,16 +14,29 @@ exports.handler = async function(event, context) {
 
     try {
         const { message } = JSON.parse(event.body);
-        const apiKey = process.env.AIML_API_KEY; // GANTI NAMA ENV
+        console.log('Message received:', message);
+        
+        // Cek API Key
+        const apiKey = process.env.AIML_API_KEY;
+        console.log('API Key exists:', !!apiKey);
+        
+        if (!apiKey) {
+            console.error('AIML_API_KEY not set');
+            return {
+                statusCode: 500,
+                body: JSON.stringify({ response: "API Key tidak ditemukan" })
+            };
+        }
 
+        console.log('Calling AIML API...');
         const response = await fetch('https://api.aimlapi.com/v1/chat/completions', {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}` // PAKAI API KEY BARU
+                'Authorization': `Bearer ${apiKey}`
             },
             body: JSON.stringify({
-                model: 'mistralai/Mistral-7B-Instruct-v0.3', // MODEL MISTRAL GRATIS
+                model: 'mistralai/Mistral-7B-Instruct-v0.3',
                 messages: [{ 
                     role: 'user', 
                     content: message 
@@ -29,18 +46,20 @@ exports.handler = async function(event, context) {
             })
         });
 
+        console.log('AIML API response status:', response.status);
         const data = await response.json();
+        console.log('AIML API response data:', data);
         
-        // Cek error dari response
         if (data.error) {
             console.error('AIML API error:', data.error);
             return {
                 statusCode: 500,
-                body: JSON.stringify({ response: "Maaf, AI lagi error. Coba lagi nanti ya!" })
+                body: JSON.stringify({ response: `AIML Error: ${data.error.message || 'Unknown'}` })
             };
         }
 
         const aiResponse = data.choices[0].message.content;
+        console.log('AI Response:', aiResponse);
 
         return {
             statusCode: 200,
@@ -58,7 +77,7 @@ exports.handler = async function(event, context) {
                 'Content-Type': 'application/json',
                 'Access-Control-Allow-Origin': '*'
             },
-            body: JSON.stringify({ response: "Maaf, lagi error. Coba lagi ya!" })
+            body: JSON.stringify({ response: `Error: ${error.message}` })
         };
     }
 };
