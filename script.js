@@ -26,7 +26,7 @@ setTimeout(() => {
     document.getElementById('openingOverlay').classList.add('hidden');
     
     setTimeout(() => {
-        const text = "Halo, saya Indra Abdul Hakim, Mahasiswa Teknik Industri dengan pengalaman di bengkel mobil, admin penjualan, dan CNC operator. Terima kasih untuk dukungannya.";
+        const text = "Halo, saya Indra Abdul Hakim, Mahasiswa Teknik Industri, selamat datang, admin penjualan. Terima kasih untuk dukungannya.";
         if ('speechSynthesis' in window) {
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'id-ID';
@@ -295,30 +295,26 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// ===== CHATBOT =====
-const chatMessages = document.getElementById('chatMessages');
-const chatInput = document.getElementById('chatInput');
-const sendChatBtn = document.getElementById('sendChatBtn');
-
-// Fungsi offline sementara sampai Netlify Functions jalan
-function getAIResponse(message) {
-    const lowerMsg = message.toLowerCase();
-    
-    if (lowerMsg.includes('halo') || lowerMsg.includes('hai') || lowerMsg.includes('hi')) {
-        return "Halo juga! Ada yang bisa gue bantu?";
-    } else if (lowerMsg.includes('siapa') || lowerMsg.includes('nama')) {
-        return "Gue Indra Abdul Hakim, industrial engineer!";
-    } else if (lowerMsg.includes('skill') || lowerMsg.includes('bisa')) {
-        return "Skill gue: Manufacturing, Data Analysis, Industrial Systems. Lengkapnya di atas!";
-    } else if (lowerMsg.includes('game')) {
-        return "Coba main game Industrial Collector di atas! Seru loh!";
-    } else if (lowerMsg.includes('makasih') || lowerMsg.includes('thanks')) {
-        return "Sama-sama! Jangan lupa kirim dukungan ya!";
-    } else {
-        return "Maaf, gue belum paham. Coba tanya yang lain ya!";
+// ===== CHATBOT DENGAN NETLIFY FUNCTIONS =====
+async function getAIResponse(message) {
+    try {
+        const response = await fetch('/.netlify/functions/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: message })
+        });
+        
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        
+        const data = await response.json();
+        return data.response;
+    } catch (error) {
+        console.error('Chat error:', error);
+        return "Maaf, lagi error. Coba lagi ya!";
     }
 }
-
 function addMessage(text, sender) {
     const div = document.createElement('div');
     div.className = `message ${sender}`;
@@ -352,7 +348,28 @@ function showTypingIndicator() {
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-function sendMessage() {
+// ===== CHATBOT DENGAN NETLIFY FUNCTIONS =====
+async function getAIResponse(message) {
+    try {
+        const response = await fetch('/.netlify/functions/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: message })
+        });
+        
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        
+        const data = await response.json();
+        return data.response;
+    } catch (error) {
+        console.error('Chat error:', error);
+        return "Maaf, lagi error. Coba lagi ya!";
+    }
+}
+
+async function sendMessage() {
     const text = chatInput.value.trim();
     if (!text) return;
     
@@ -360,14 +377,17 @@ function sendMessage() {
     chatInput.value = '';
     showTypingIndicator();
     
-    setTimeout(() => {
-        document.getElementById('typingIndicator')?.remove();
-        const response = getAIResponse(text);
-        addMessage(response, 'bot');
-    }, 1000);
+    // Panggil API
+    const response = await getAIResponse(text);
+    
+    document.getElementById('typingIndicator')?.remove();
+    addMessage(response, 'bot');
 }
 
 sendChatBtn.addEventListener('click', sendMessage);
+chatInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') sendMessage();
+});sendChatBtn.addEventListener('click', sendMessage);
 chatInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') sendMessage();
 });
