@@ -1,9 +1,27 @@
 const fetch = require('node-fetch');
 
 exports.handler = async function(event, context) {
+    // CORS headers
+    const headers = {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Content-Type': 'application/json'
+    };
+
+    // Handle preflight OPTIONS request
+    if (event.httpMethod === 'OPTIONS') {
+        return {
+            statusCode: 200,
+            headers,
+            body: ''
+        };
+    }
+
     if (event.httpMethod !== 'POST') {
         return { 
             statusCode: 405, 
+            headers,
             body: JSON.stringify({ error: 'Method not allowed' }) 
         };
     }
@@ -12,8 +30,15 @@ exports.handler = async function(event, context) {
         const { message } = JSON.parse(event.body);
         const apiKey = process.env.SID_API_KEY;
 
-        console.log('Sending request to s.id API...');
-        
+        if (!apiKey) {
+            console.error('SID_API_KEY not set');
+            return {
+                statusCode: 500,
+                headers,
+                body: JSON.stringify({ response: "API Key error - hubungi admin" })
+            };
+        }
+
         const response = await fetch('https://api.s.id/v1/chat/completions', {
             method: 'POST',
             headers: { 
@@ -30,31 +55,33 @@ exports.handler = async function(event, context) {
         });
 
         const data = await response.json();
-        console.log('Response received:', data);
 
         if (!response.ok) {
-            throw new Error(data.error?.message || 'API error');
+            console.error('S.ID API error:', data);
+            return {
+                statusCode: 500,
+                headers,
+                body: JSON.stringify({ 
+                    response: "Maaf, AI lagi maintenance. Coba lagi nanti ya!" 
+                })
+            };
         }
 
         const aiResponse = data.choices[0].message.content;
 
         return {
             statusCode: 200,
-            headers: { 
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*'
-            },
+            headers,
             body: JSON.stringify({ response: aiResponse })
         };
     } catch (error) {
         console.error('Function error:', error);
         return {
             statusCode: 500,
-            headers: { 
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*'
-            },
-            body: JSON.stringify({ response: "Maaf, lagi error. Coba lagi ya!" })
+            headers,
+            body: JSON.stringify({ 
+                response: "Maaf, sedang ada gangguan. Silakan coba lagi." 
+            })
         };
     }
 };
