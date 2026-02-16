@@ -294,8 +294,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }, { once: true });
     }
 });
-
-// ===== CHATBOT DENGAN NETLIFY FUNCTIONS =====
+// ===== CHATBOT DENGAN S.ID API =====
 async function getAIResponse(message) {
     try {
         const response = await fetch('/.netlify/functions/chat', {
@@ -305,60 +304,7 @@ async function getAIResponse(message) {
         });
         
         if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        
-        const data = await response.json();
-        return data.response;
-    } catch (error) {
-        console.error('Chat error:', error);
-        return "Maaf, lagi error. Coba lagi ya!";
-    }
-}
-function addMessage(text, sender) {
-    const div = document.createElement('div');
-    div.className = `message ${sender}`;
-    
-    const avatar = document.createElement('div');
-    avatar.className = 'message-avatar';
-    avatar.innerHTML = `<i class="fas fa-${sender === 'user' ? 'user' : 'robot'}"></i>`;
-    
-    const content = document.createElement('div');
-    content.className = 'message-content';
-    content.textContent = text;
-    
-    if (sender === 'user') {
-        div.appendChild(content);
-        div.appendChild(avatar);
-    } else {
-        div.appendChild(avatar);
-        div.appendChild(content);
-    }
-    
-    chatMessages.appendChild(div);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-}
-
-function showTypingIndicator() {
-    const typingDiv = document.createElement('div');
-    typingDiv.className = 'message bot';
-    typingDiv.id = 'typingIndicator';
-    typingDiv.innerHTML = '<div class="message-avatar"><i class="fas fa-robot"></i></div><div class="typing-indicator"><span></span><span></span><span></span></div>';
-    chatMessages.appendChild(typingDiv);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-}
-
-// ===== CHATBOT DENGAN AIML API =====
-async function getAIResponse(message) {
-    try {
-        const response = await fetch('/.netlify/functions/chat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: message })
-        });
-        
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
         
         const data = await response.json();
