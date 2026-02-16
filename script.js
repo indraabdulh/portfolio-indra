@@ -26,7 +26,7 @@ setTimeout(() => {
     document.getElementById('openingOverlay').classList.add('hidden');
     
     setTimeout(() => {
-        const text = "Halo, saya Indra Abdul Hakim, Mahasiswa Teknik Industri, selamat datang, admin penjualan. Terima kasih untuk dukungannya.";
+        const text = "Halo, saya Indra Abdul Hakim, Mahasiswa Teknik Industri, selamat datang, dan Terima kasih untuk dukungannya.";
         if ('speechSynthesis' in window) {
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'id-ID';
@@ -348,7 +348,7 @@ function showTypingIndicator() {
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-// ===== CHATBOT DENGAN NETLIFY FUNCTIONS =====
+// ===== CHATBOT DENGAN AIML API =====
 async function getAIResponse(message) {
     try {
         const response = await fetch('/.netlify/functions/chat', {
@@ -369,6 +369,39 @@ async function getAIResponse(message) {
     }
 }
 
+function addMessage(text, sender) {
+    const div = document.createElement('div');
+    div.className = `message ${sender}`;
+    
+    const avatar = document.createElement('div');
+    avatar.className = 'message-avatar';
+    avatar.innerHTML = `<i class="fas fa-${sender === 'user' ? 'user' : 'robot'}"></i>`;
+    
+    const content = document.createElement('div');
+    content.className = 'message-content';
+    content.textContent = text;
+    
+    if (sender === 'user') {
+        div.appendChild(content);
+        div.appendChild(avatar);
+    } else {
+        div.appendChild(avatar);
+        div.appendChild(content);
+    }
+    
+    chatMessages.appendChild(div);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function showTypingIndicator() {
+    const typingDiv = document.createElement('div');
+    typingDiv.className = 'message bot';
+    typingDiv.id = 'typingIndicator';
+    typingDiv.innerHTML = '<div class="message-avatar"><i class="fas fa-robot"></i></div><div class="typing-indicator"><span></span><span></span><span></span></div>';
+    chatMessages.appendChild(typingDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
 async function sendMessage() {
     const text = chatInput.value.trim();
     if (!text) return;
@@ -377,7 +410,6 @@ async function sendMessage() {
     chatInput.value = '';
     showTypingIndicator();
     
-    // Panggil API
     const response = await getAIResponse(text);
     
     document.getElementById('typingIndicator')?.remove();
@@ -387,11 +419,7 @@ async function sendMessage() {
 sendChatBtn.addEventListener('click', sendMessage);
 chatInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') sendMessage();
-});sendChatBtn.addEventListener('click', sendMessage);
-chatInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') sendMessage();
 });
-
 // ===== ENERGY SECTION =====
 const energySlider = document.getElementById('energySlider');
 const energyDisplay = document.getElementById('energyDisplay');
