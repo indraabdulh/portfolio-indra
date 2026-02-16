@@ -19,7 +19,17 @@ exports.handler = async function(event, context) {
         const { message } = JSON.parse(event.body);
         const apiKey = process.env.OPENAI_API_KEY;
 
-        console.log('Using API Key:', apiKey ? 'Exists' : 'Missing'); // buat debug
+        // Cek API Key
+        if (!apiKey) {
+            console.error('API Key missing');
+            return {
+                statusCode: 200,
+                headers,
+                body: JSON.stringify({ 
+                    response: "Halo! API key belum disetting nih. Tapi lo bisa lihat project-project gue yang keren di atas! 😎" 
+                })
+            };
+        }
 
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
@@ -32,36 +42,51 @@ exports.handler = async function(event, context) {
                 messages: [{ 
                     role: 'user', 
                     content: message 
-                }]
+                }],
+                temperature: 0.7,
+                max_tokens: 300
             })
         });
 
         const data = await response.json();
 
+        // Log response buat debugging
+        console.log('OpenAI response status:', response.status);
+        console.log('OpenAI response data:', JSON.stringify(data).substring(0, 200));
+
         if (!response.ok) {
-            console.error('OpenAI error:', data);
+            console.error('OpenAI error details:', data);
+            
+            // Kirim error detail ke response
+            let errorMsg = "Halo! Gue lagi sibuk nih, tapi lo bisa cek project-project gue yang lain ya! 😊";
+            
+            if (data.error && data.error.message) {
+                console.log('Specific error:', data.error.message);
+                // Bisa tambahin error message kalo mau tau detail
+            }
+            
             return {
                 statusCode: 200,
                 headers,
-                body: JSON.stringify({ 
-                    response: "Halo! Gue lagi sibuk nih, tapi lo bisa cek project-project gue yang lain ya! 😊" 
-                })
+                body: JSON.stringify({ response: errorMsg })
             };
         }
+
+        const aiResponse = data.choices[0].message.content;
 
         return {
             statusCode: 200,
             headers,
-            body: JSON.stringify({ response: data.choices[0].message.content })
+            body: JSON.stringify({ response: aiResponse })
         };
 
     } catch (error) {
-        console.error('Error:', error);
+        console.error('Function error:', error);
         return {
             statusCode: 200,
             headers,
             body: JSON.stringify({ 
-                response: "Halo! Ada yang bisa gue bantu?" 
+                response: "Halo! Ada yang bisa gue bantu? (maaf lagi error)" 
             })
         };
     }
