@@ -21,15 +21,17 @@ exports.handler = async function(event, context) {
 
         // Cek API Key
         if (!apiKey) {
-            console.error('API Key missing');
+            console.error('❌ OPENAI_API_KEY not set');
             return {
                 statusCode: 200,
                 headers,
                 body: JSON.stringify({ 
-                    response: "Halo! API key belum disetting nih. Tapi lo bisa lihat project-project gue yang keren di atas! 😎" 
+                    response: "🔑 API key belum disetting. Hubungi admin!" 
                 })
             };
         }
+
+        console.log('✅ API Key exists, calling OpenAI...');
 
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
@@ -49,30 +51,25 @@ exports.handler = async function(event, context) {
         });
 
         const data = await response.json();
-
-        // Log response buat debugging
-        console.log('OpenAI response status:', response.status);
-        console.log('OpenAI response data:', JSON.stringify(data).substring(0, 200));
+        console.log('📡 OpenAI response status:', response.status);
 
         if (!response.ok) {
-            console.error('OpenAI error details:', data);
+            console.error('❌ OpenAI error:', data);
             
-            // Kirim error detail ke response
-            let errorMsg = "Halo! Gue lagi sibuk nih, tapi lo bisa cek project-project gue yang lain ya! 😊";
-            
-            if (data.error && data.error.message) {
-                console.log('Specific error:', data.error.message);
-                // Bisa tambahin error message kalo mau tau detail
+            let errorDetail = "Gue lagi error nih. Coba lagi nanti ya!";
+            if (data.error) {
+                errorDetail = `Error: ${data.error.message || 'Unknown'}`;
             }
             
             return {
                 statusCode: 200,
                 headers,
-                body: JSON.stringify({ response: errorMsg })
+                body: JSON.stringify({ response: errorDetail })
             };
         }
 
         const aiResponse = data.choices[0].message.content;
+        console.log('✅ Response received');
 
         return {
             statusCode: 200,
@@ -81,12 +78,12 @@ exports.handler = async function(event, context) {
         };
 
     } catch (error) {
-        console.error('Function error:', error);
+        console.error('💥 Function error:', error);
         return {
             statusCode: 200,
             headers,
             body: JSON.stringify({ 
-                response: "Halo! Ada yang bisa gue bantu? (maaf lagi error)" 
+                response: "⚠️ Error teknis. Coba lagi ya!" 
             })
         };
     }
