@@ -5,7 +5,7 @@ AOS.init({
     mirror: true
 });
 
-// ===== EMAILJS INIT (tetap client-side) =====
+// ===== EMAILJS INIT =====
 emailjs.init("ZvcX816KIJJeEobus");
 
 // ===== PARTICLES =====
@@ -26,7 +26,7 @@ setTimeout(() => {
     document.getElementById('openingOverlay').classList.add('hidden');
     
     setTimeout(() => {
-        const text = "Halo, saya Indra Abdul Hakim, Mahasiswa Teknik Industri dengan saat ini sedang belajar banyak hal, terima kasih atas dukungannya.";
+        const text = "Halo, saya Indra Abdul Hakim, Mahasiswa Teknik Industri dengan pengalaman di bengkel mobil, admin penjualan, dan CNC operator. Terima kasih untuk dukungannya.";
         if ('speechSynthesis' in window) {
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'id-ID';
@@ -273,26 +273,52 @@ function resetGame() {
 collectorArea.addEventListener('mousemove', moveCollector);
 collectorArea.addEventListener('touchmove', moveCollectorTouch);
 
-// ===== CHATBOT DENGAN BACKEND =====
+// ===== FIX AUDIO =====
+document.addEventListener('DOMContentLoaded', function() {
+    const audio = document.getElementById('bgMusic');
+    if (audio) {
+        audio.volume = 0.3;
+        
+        function playAudio() {
+            audio.play().catch(e => {
+                console.log('Autoplay failed:', e);
+            });
+        }
+        
+        playAudio();
+        
+        // Play on first click
+        document.body.addEventListener('click', function playOnClick() {
+            audio.play();
+            document.body.removeEventListener('click', playOnClick);
+        }, { once: true });
+    }
+});
+
+// ===== CHATBOT =====
 const chatMessages = document.getElementById('chatMessages');
 const chatInput = document.getElementById('chatInput');
 const sendChatBtn = document.getElementById('sendChatBtn');
 
-async function getAIResponse(message) {
-    try {
-        const response = await fetch('/.netlify/functions/chat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: message })
-        });
-        
-        const data = await response.json();
-        return data.response;
-    } catch (error) {
-        console.error('Chat error:', error);
-        return "Maaf, chatbot lagi error. Coba lagi ya!";
+// Fungsi offline sementara sampai Netlify Functions jalan
+function getAIResponse(message) {
+    const lowerMsg = message.toLowerCase();
+    
+    if (lowerMsg.includes('halo') || lowerMsg.includes('hai') || lowerMsg.includes('hi')) {
+        return "Halo juga! Ada yang bisa gue bantu?";
+    } else if (lowerMsg.includes('siapa') || lowerMsg.includes('nama')) {
+        return "Gue Indra Abdul Hakim, industrial engineer!";
+    } else if (lowerMsg.includes('skill') || lowerMsg.includes('bisa')) {
+        return "Skill gue: Manufacturing, Data Analysis, Industrial Systems. Lengkapnya di atas!";
+    } else if (lowerMsg.includes('game')) {
+        return "Coba main game Industrial Collector di atas! Seru loh!";
+    } else if (lowerMsg.includes('makasih') || lowerMsg.includes('thanks')) {
+        return "Sama-sama! Jangan lupa kirim dukungan ya!";
+    } else {
+        return "Maaf, gue belum paham. Coba tanya yang lain ya!";
     }
 }
+
 function addMessage(text, sender) {
     const div = document.createElement('div');
     div.className = `message ${sender}`;
@@ -326,20 +352,21 @@ function showTypingIndicator() {
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-async function getAIResponse(message) {
-    try {
-        const response = await fetch('/.netlify/functions/chat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: message })
-        });
-        
-        const data = await response.json();
-        return data.response;
-    } catch (error) {
-        return "Maaf, lagi error. Coba lagi ya!";
-    }
+function sendMessage() {
+    const text = chatInput.value.trim();
+    if (!text) return;
+    
+    addMessage(text, 'user');
+    chatInput.value = '';
+    showTypingIndicator();
+    
+    setTimeout(() => {
+        document.getElementById('typingIndicator')?.remove();
+        const response = getAIResponse(text);
+        addMessage(response, 'bot');
+    }, 1000);
 }
+
 sendChatBtn.addEventListener('click', sendMessage);
 chatInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') sendMessage();
@@ -381,24 +408,8 @@ sendBtn.addEventListener('click', () => {
         document.getElementById('messageText').value = '';
         
         setTimeout(() => notification.classList.remove('show'), 3000);
-    }).catch(console.error);
-});
-// ===== AUTOPLAY AUDIO FIX =====
-document.addEventListener('DOMContentLoaded', function() {
-    const audio = document.getElementById('bgMusic');
-    audio.volume = 0.5;
-    
-    function playAudio() {
-        audio.play().catch(e => {
-            console.log('Autoplay failed, waiting for interaction');
-        });
-    }
-    
-    playAudio();
-    
-    // Fallback: play saat user klik pertama kali
-    document.addEventListener('click', function playOnClick() {
-        audio.play();
-        document.removeEventListener('click', playOnClick);
-    }, { once: true });
+    }).catch((error) => {
+        alert('Error: ' + error);
+        console.error(error);
+    });
 });
