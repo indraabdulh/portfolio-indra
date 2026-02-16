@@ -1,12 +1,9 @@
-const fetch = require('node-fetch');
-
 exports.handler = async function(event, context) {
     // CORS headers
     const headers = {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Headers': 'Content-Type',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Content-Type': 'application/json'
+        'Access-Control-Allow-Methods': 'POST, OPTIONS'
     };
 
     // Handle preflight OPTIONS request
@@ -28,60 +25,28 @@ exports.handler = async function(event, context) {
 
     try {
         const { message } = JSON.parse(event.body);
-        const apiKey = process.env.SID_API_KEY;
-
-        if (!apiKey) {
-            console.error('SID_API_KEY not set');
-            return {
-                statusCode: 500,
-                headers,
-                body: JSON.stringify({ response: "API Key error - hubungi admin" })
-            };
-        }
-
-        const response = await fetch('https://api.s.id/v1/chat/completions', {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}`
-            },
-            body: JSON.stringify({
-                model: 'gpt-3.5-turbo',
-                messages: [{ 
-                    role: 'user', 
-                    content: message 
-                }]
-            })
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            console.error('S.ID API error:', data);
-            return {
-                statusCode: 500,
-                headers,
-                body: JSON.stringify({ 
-                    response: "Maaf, AI lagi maintenance. Coba lagi nanti ya!" 
-                })
-            };
-        }
-
-        const aiResponse = data.choices[0].message.content;
+        
+        // Response sederhana dulu buat testing
+        const responses = [
+            "Halo! Ada yang bisa gue bantu? 😎",
+            "Wah menarik! Ceritain lebih lanjut dong!",
+            "Gue denger nih, lanjut!",
+            "Iya nih, gue setuju banget!",
+            "Hmm gitu ya? Terus gimana?"
+        ];
+        
+        const randomResponse = responses[Math.floor(Math.random() * responses.length)];
 
         return {
             statusCode: 200,
             headers,
-            body: JSON.stringify({ response: aiResponse })
+            body: JSON.stringify({ response: randomResponse })
         };
     } catch (error) {
-        console.error('Function error:', error);
         return {
             statusCode: 500,
             headers,
-            body: JSON.stringify({ 
-                response: "Maaf, sedang ada gangguan. Silakan coba lagi." 
-            })
+            body: JSON.stringify({ response: "Maaf, lagi error. Coba lagi ya!" })
         };
     }
 };
