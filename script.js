@@ -330,20 +330,20 @@ function showTypingIndicator() {
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-async function sendMessage() {
-    const text = chatInput.value.trim();
-    if (!text) return;
-    
-    addMessage(text, 'user');
-    chatInput.value = '';
-    showTypingIndicator();
-    
-    const response = await getAIResponse(text);
-    
-    document.getElementById('typingIndicator')?.remove();
-    addMessage(response, 'bot');
+async function getAIResponse(message) {
+    try {
+        const response = await fetch('/.netlify/functions/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: message })
+        });
+        
+        const data = await response.json();
+        return data.response;
+    } catch (error) {
+        return "Maaf, lagi error. Coba lagi ya!";
+    }
 }
-
 sendChatBtn.addEventListener('click', sendMessage);
 chatInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') sendMessage();
