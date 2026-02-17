@@ -19,8 +19,9 @@ exports.handler = async function(event, context) {
         const { message } = JSON.parse(event.body);
         const apiKey = process.env.GEMINI_API_KEY;
 
-        // PAKAI MODEL GEMINI 1.5 PRO
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro:generateContent?key=${apiKey}`, {
+        console.log('API Key exists:', !!apiKey);
+
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json'
@@ -35,14 +36,15 @@ exports.handler = async function(event, context) {
         });
 
         const data = await response.json();
+        console.log('Response status:', response.status);
+        console.log('Response data:', JSON.stringify(data).substring(0, 200));
 
         if (!response.ok) {
-            console.error('Gemini error:', data);
             return {
                 statusCode: 200,
                 headers,
                 body: JSON.stringify({ 
-                    response: "Halo! Ada yang bisa gue bantu?" 
+                    response: `Error: ${data.error?.message || 'Unknown error'}` 
                 })
             };
         }
@@ -61,7 +63,7 @@ exports.handler = async function(event, context) {
             statusCode: 200,
             headers,
             body: JSON.stringify({ 
-                response: "Halo! Ada yang bisa gue bantu?" 
+                response: `Error: ${error.message}` 
             })
         };
     }
