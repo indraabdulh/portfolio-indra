@@ -11,51 +11,56 @@ exports.handler = async function(event, context) {
         return { statusCode: 200, headers, body: '' };
     }
 
+    if (event.httpMethod !== 'POST') {
+        return { statusCode: 405, headers, body: 'Method not allowed' };
+    }
+
     try {
         const { message } = JSON.parse(event.body);
-        const apiKey = process.env.OPENAI_API_KEY;
+        const apiKey = process.env.GEMINI_API_KEY;
 
-        // TEST PAKAI MODEL YANG PALING BASIC
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}`
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                model: 'gpt-3.5-turbo',
-                messages: [
-                    { role: 'system', content: 'Kamu adalah asisten ramah' },
-                    { role: 'user', content: message }
-                ]
+                contents: [{
+                    parts: [{
+                        text: message
+                    }]
+                }]
             })
         });
 
         const data = await response.json();
 
-        // Kalo error, tampilin detailnya
         if (!response.ok) {
+            console.error('Gemini error:', data);
             return {
                 statusCode: 200,
                 headers,
                 body: JSON.stringify({ 
-                    response: `Error: ${data.error?.message || 'Unknown'}` 
+                    response: "Halo! Ada yang bisa gue bantu? (mode santai 😎)" 
                 })
             };
         }
 
+        const aiResponse = data.candidates[0].content.parts[0].text;
+
         return {
             statusCode: 200,
             headers,
-            body: JSON.stringify({ response: data.choices[0].message.content })
+            body: JSON.stringify({ response: aiResponse })
         };
 
     } catch (error) {
+        console.error('Function error:', error);
         return {
             statusCode: 200,
             headers,
             body: JSON.stringify({ 
-                response: `Error: ${error.message}` 
+                response: "Halo! Ada yang bisa gue bantu?" 
             })
         };
     }
