@@ -15,6 +15,7 @@ exports.handler = async function(event, context) {
         const { message } = JSON.parse(event.body);
         const apiKey = process.env.OPENAI_API_KEY;
 
+        // TEST PAKAI MODEL YANG PALING BASIC
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
             headers: { 
@@ -22,12 +23,26 @@ exports.handler = async function(event, context) {
                 'Authorization': `Bearer ${apiKey}`
             },
             body: JSON.stringify({
-                model: 'gpt-3.5-turbo', // PASTIKAN INI
-                messages: [{ role: 'user', content: message }]
+                model: 'gpt-3.5-turbo',
+                messages: [
+                    { role: 'system', content: 'Kamu adalah asisten ramah' },
+                    { role: 'user', content: message }
+                ]
             })
         });
 
         const data = await response.json();
+
+        // Kalo error, tampilin detailnya
+        if (!response.ok) {
+            return {
+                statusCode: 200,
+                headers,
+                body: JSON.stringify({ 
+                    response: `Error: ${data.error?.message || 'Unknown'}` 
+                })
+            };
+        }
 
         return {
             statusCode: 200,
@@ -40,7 +55,7 @@ exports.handler = async function(event, context) {
             statusCode: 200,
             headers,
             body: JSON.stringify({ 
-                response: "Halo! Ada yang bisa gue bantu? (mode santai 😎)" 
+                response: `Error: ${error.message}` 
             })
         };
     }
