@@ -19,8 +19,8 @@ exports.handler = async function(event, context) {
         const { message } = JSON.parse(event.body);
         const apiKey = process.env.GEMINI_API_KEY;
 
-        // PAKAI MODEL GEMINI 1.0 PRO (PASTI ADA)
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.0-pro:generateContent?key=${apiKey}`, {
+        // PAKAI GEMINI 1.5 FLASH (PASTI SUPPORT)
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json'
