@@ -19,9 +19,8 @@ exports.handler = async function(event, context) {
         const { message } = JSON.parse(event.body);
         const apiKey = process.env.GEMINI_API_KEY;
 
-        console.log('API Key exists:', !!apiKey);
-
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`, {
+        // PAKAI MODEL GEMINI 1.0 PRO (PASTI ADA)
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.0-pro:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json'
@@ -36,15 +35,13 @@ exports.handler = async function(event, context) {
         });
 
         const data = await response.json();
-        console.log('Response status:', response.status);
-        console.log('Response data:', JSON.stringify(data).substring(0, 200));
 
         if (!response.ok) {
             return {
                 statusCode: 200,
                 headers,
                 body: JSON.stringify({ 
-                    response: `Error: ${data.error?.message || 'Unknown error'}` 
+                    response: `Error: ${data.error?.message || 'Unknown'}` 
                 })
             };
         }
@@ -58,7 +55,6 @@ exports.handler = async function(event, context) {
         };
 
     } catch (error) {
-        console.error('Function error:', error);
         return {
             statusCode: 200,
             headers,
