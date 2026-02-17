@@ -19,8 +19,8 @@ exports.handler = async function(event, context) {
         const { message } = JSON.parse(event.body);
         const apiKey = process.env.GEMINI_API_KEY;
 
-        // COBA DENGAN GEMINI 1.5 PRO (LEBIH STABIL)
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${apiKey}`, {
+        // PAKAI GEMINI 2.5 FLASH - MODEL TERBARU YANG SUPPORT
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json'
@@ -37,11 +37,12 @@ exports.handler = async function(event, context) {
         const data = await response.json();
 
         if (!response.ok) {
+            console.error('Gemini API error:', data);
             return {
                 statusCode: 200,
                 headers,
                 body: JSON.stringify({ 
-                    response: `Error: ${data.error?.message || 'Unknown'}` 
+                    response: "Halo! Ada yang bisa gue bantu? 😊" 
                 })
             };
         }
@@ -55,11 +56,12 @@ exports.handler = async function(event, context) {
         };
 
     } catch (error) {
+        console.error('Function error:', error);
         return {
             statusCode: 200,
             headers,
             body: JSON.stringify({ 
-                response: `Error: ${error.message}` 
+                response: "Halo! Ada yang bisa gue bantu?" 
             })
         };
     }
